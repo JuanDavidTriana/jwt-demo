@@ -1,7 +1,5 @@
 package com.example.jwt_demo.config;
 
-import java.security.Security;
-
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -21,37 +19,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.example.jwt_demo.security.JwtAuthFilter;
  
-@Configuration // Indica que esta clase es una configuración de Spring
-@EnableWebSecurity // Activa la seguridad web de Spring
+@Configuration
+@EnableWebSecurity
 public class SecurityConfig {
-
+    
     @Autowired
-    private JwtAuthFilter jwtAuthFilter; // Inyecta el filtro de autenticación JWT
-
+    private JwtAuthFilter jwtAuthFilter;
+    
     @Autowired
-    private UserDetailsService userDetailsService; // Inyecta el servicio de detalles de usuario
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        // Utiliza BCrypt para codificar las contraseñas
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        // Configura el AuthenticationManager con la configuración de autenticación valida usuario y contraseña
-        return config.getAuthenticationManager();
-    }
-
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        // Configura el AuthenticationProvider para usar DaoAuthenticationProvider el motor de autenticación de Spring
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
-
+    private UserDetailsService userDetailsService;
+    
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -59,7 +36,7 @@ public class SecurityConfig {
             .cors(cors -> cors.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/test/**").permitAll()
+                .requestMatchers("/api/test/public").permitAll()
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/").permitAll()
                 .requestMatchers("/favicon.ico").permitAll()
@@ -74,5 +51,21 @@ public class SecurityConfig {
         return http.build();
     }
     
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
     
-}
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+    
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+} 

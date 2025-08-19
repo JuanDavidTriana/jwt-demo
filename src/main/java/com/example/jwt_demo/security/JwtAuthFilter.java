@@ -22,59 +22,63 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
-
+    
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthFilter.class);
-
+    
     @Autowired
     private JwtService jwtService;
-
+    
     @Autowired
     private UserDetailsService userDetailsService;
-
+    
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+        
         try {
             final String authHeader = request.getHeader("Authorization");
             final String jwt;
             final String username;
-
-            // Si no hay encabezado de autorización, se pasa al siguiente filtro
+            
+            // Si no hay header de autorización, continuar sin autenticación
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                logger.debug("No hay token JWT en la petición a: {}", request.getRequestURI());
                 filterChain.doFilter(request, response);
                 return;
             }
-
-            jwt = authHeader.substring(7); // Extrae el token JWT
-
-            username = jwtService.extractUsername(jwt); // Extrae el nombre de usuario del token
-
+            
+            jwt = authHeader.substring(7);
+            logger.debug("Procesando token JWT para petición a: {}", request.getRequestURI());
+            
+            // Validar y extraer el username del token
+            username = jwtService.extractUsername(jwt);
+            
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-
+                
                 if (jwtService.validateToken(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken
-                            = new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities());
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
                     authToken.setDetails(
                             new WebAuthenticationDetailsSource().buildDetails(request)
                     );
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    logger.debug("Usuario autenticado: {}", username);
-
+                    logger.debug("Usuario autenticado exitosamente: {} en {}", username, request.getRequestURI());
                 } else {
-                    logger.debug("Token JWT no válido o expirado para el usuario: {}", username);
+                    logger.debug("Token JWT inválido para usuario: {} en {}", username, request.getRequestURI());
                 }
             }
-
         } catch (Exception e) {
-            logger.error("Error al procesar el filtro JWT: {}", e.getMessage());
+            logger.error("Error en el filtro JWT para {}: {}", request.getRequestURI(), e.getMessage());
+            // En caso de error, continuar sin autenticación
         }
-        filterChain.doFilter(request, response); // Pasa al siguiente filtro en la cadena
+        
+        filterChain.doFilter(request, response);
     }
-}
+} 

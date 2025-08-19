@@ -40,6 +40,10 @@ public class Usuario {
     private boolean activo = true;
 
     // Costructor
+
+    public Usuario() {
+    }
+
     public Usuario(String username, String email, String password) {
         this.username = username;
         this.email = email;

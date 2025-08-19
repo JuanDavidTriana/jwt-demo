@@ -15,32 +15,30 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        //Permitir todos los origene
-        configuration.setAllowedOrigins(List.of("*"));
-
-        // Metodos HHTTP permitidos
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "OPTIONS"));
-
-        // Encabezados permitidos
+        
+        // Permitir todos los orígenes para desarrollo
+        configuration.setAllowedOriginPatterns(List.of("*"));
+        
+        // Métodos HTTP permitidos
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        
+        // Headers permitidos
         configuration.setAllowedHeaders(Arrays.asList(
             "Origin", "Content-Type", "Accept", "Authorization", 
             "X-Requested-With", "Cache-Control", "Pragma"
         ));
-
-        // Exponer encabezados
-        configuration.setExposedHeaders(Arrays.asList(
-            "Authorization", "Content-Type"
-        ));
-
+        
+        // Headers expuestos
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+        
         // Permitir credenciales
         configuration.setAllowCredentials(true);
-
-        // tiempo
-        configuration.setMaxAge(3600L); // 1 hora
-
+        
+        // Tiempo de cache para preflight requests
+        configuration.setMaxAge(3600L);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-}
+} 
