@@ -1,10 +1,17 @@
 package com.example.jwt_demo.model;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -38,6 +45,14 @@ public class Usuario {
 
     @Column(name = "activo", nullable = false)
     private boolean activo = true;
+
+
+    @ManyToMany(fetch= FetchType.EAGER)
+    @JoinTable(
+            name = "usuario_roles",
+            joinColumns = @JoinColumn(name = "usuario_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<RoleEntity> roles = new HashSet<>();
 
     // Costructor
 
@@ -98,7 +113,35 @@ public class Usuario {
         this.activo = activo;
     }
 
-    
+    //Metodos para manejar roles
+    public Set<RoleEntity> getRoles() {
+        return roles;
+    }
 
+    public void setRoles(Set<RoleEntity> roles) {
+        this.roles = roles;
+    }
+
+    public void addRole(RoleEntity role) {
+        this.roles.add(role);
+    }
+
+    public void removeRole(RoleEntity role) {
+        this.roles.remove(role);
+    }
+
+    public boolean hasRole(Role role) {
+        return this.roles.stream()
+                .anyMatch(roleEntity -> roleEntity.getName() == role);
+    }
+
+    public boolean hasAnyRole(Role... roles) {
+        for (Role role : roles) {
+            if (hasRole(role)) {
+                return true;
+            }
+        }
+        return false;
+    }
     
 }

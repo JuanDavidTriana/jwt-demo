@@ -1,5 +1,8 @@
 package com.example.jwt_demo.service;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -11,6 +14,8 @@ import org.springframework.stereotype.Service;
 import com.example.jwt_demo.dto.AuthResponse;
 import com.example.jwt_demo.dto.LoginRequest;
 import com.example.jwt_demo.dto.RegistroRequest;
+import com.example.jwt_demo.model.Role;
+import com.example.jwt_demo.model.RoleEntity;
 import com.example.jwt_demo.model.Usuario;
 import com.example.jwt_demo.repository.UsuarioRepository;
 
@@ -28,6 +33,9 @@ public class AuthService {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private RoleService roleService;
 
     //Crear nuevo usuario
     public AuthResponse registrar(RegistroRequest request){
@@ -47,7 +55,21 @@ public class AuthService {
         usuario.setNombreCompleto(request.getNombreCompleto());
         usuario.setActivo(true);
 
+        // Asignar roles
+        Set<RoleEntity> roles;
+        
+        roles = Set.of(roleService.getRoleByName(Role.ROLE_USER));
+
+        usuario.setRoles(roles);
+
         usuarioRepository.save(usuario);
+
+        //Generar token con roles
+        Set<org.springframework.security.core.authority.SimpleGrantedAuthority> authorities = new HashSet<>();
+            for (RoleEntity role : usuario.getRoles()) {
+                authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(role.getName().name()));
+            }
+
 
         // Generar token
         UserDetails userDetails = new org.springframework.security.core.userdetails.User(
@@ -57,12 +79,16 @@ public class AuthService {
                 true,
                 true,
                 true,
-                java.util.Collections.singletonList(new org.springframework.security.core.authority.SimpleGrantedAuthority("USER"))
+                authorities
                );
 
         String token = jwtService.generateToken(userDetails);
 
-        return new AuthResponse(token, usuario.getUsername(), usuario.getEmail(), usuario.getNombreCompleto());
+        Set<Role> userRoles = usuario.getRoles().stream()
+                .map(RoleEntity::getName)
+                .collect(java.util.stream.Collectors.toSet());
+
+        return new AuthResponse(token, usuario.getUsername(), usuario.getEmail(), usuario.getNombreCompleto(), userRoles);
 
     }
 
@@ -79,8 +105,14 @@ public class AuthService {
 
         String token = jwtService.generateToken(userDetails);
 
-        return new AuthResponse(token, usuario.getUsername(), usuario.getEmail(), usuario.getNombreCompleto());
+        Set<Role> userRoles = usuario.getRoles().stream()
+                .map(RoleEntity::getName)
+                .collect(java.util.stream.Collectors.toSet());
+
+        return new AuthResponse(token, usuario.getUsername(), usuario.getEmail(), usuario.getNombreCompleto(), userRoles);
 
     }
+
+   
 
 }

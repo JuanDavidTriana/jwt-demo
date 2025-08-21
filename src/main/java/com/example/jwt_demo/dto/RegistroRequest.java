@@ -1,5 +1,9 @@
 package com.example.jwt_demo.dto;
 
+import java.util.Set;
+
+import com.example.jwt_demo.model.Role;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -19,15 +23,28 @@ public class RegistroRequest {
     private String password;
     
     private String nombreCompleto;
+
+    private Set<Role> roles;
     
     // Constructores
     public RegistroRequest() {}
     
     public RegistroRequest(String username, String email, String password, String nombreCompleto) {
+        // Constructor para crear un usuario con el rol por defecto
         this.username = username;
         this.email = email;
         this.password = password;
         this.nombreCompleto = nombreCompleto;
+        this.roles = Set.of(Role.ROLE_USER); // Default role
+    }
+
+    public RegistroRequest(String username, String email, String password, String nombreCompleto, Set<Role> roles) {
+        // Constructor para crear un usuario con roles específicos
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.nombreCompleto = nombreCompleto;
+        this.roles = roles;
     }
     
     // Getters y Setters
@@ -61,5 +78,13 @@ public class RegistroRequest {
     
     public void setNombreCompleto(String nombreCompleto) {
         this.nombreCompleto = nombreCompleto;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 } 

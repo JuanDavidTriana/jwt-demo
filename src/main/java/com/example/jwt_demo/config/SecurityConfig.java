@@ -8,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -21,6 +22,7 @@ import com.example.jwt_demo.security.JwtAuthFilter;
  
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     
     @Autowired
@@ -37,6 +39,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/test/public").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/moderator/**").hasAnyRole("ADMIN", "MODERATOR")
+                .requestMatchers("/api/editor/**").hasAnyRole("ADMIN", "EDITOR")
+                .requestMatchers("/api/user/**").hasAnyRole("ADMIN", "MODERATOR", "EDITOR", "USER")
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/").permitAll()
                 .requestMatchers("/favicon.ico").permitAll()
